@@ -39,3 +39,23 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# agent tools
+.agent/
+.agents/
+.trae/
+.gemini/
+
+# temporary test files
+test_gemini.js
+test_new_key.js
+list_models.js
+fix-audio*.html
+testscript.md
+PLAN_DIRECTOR_BRAIN.md
+IMPLEMENTATION_PLAN*.md
+VIDEO_SPEC.md
+DESIGN.md
+
+# convex
+convex/_generated

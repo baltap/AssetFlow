@@ -13,14 +13,26 @@ export const createCheckoutSession = action({
         topUpAmount: v.optional(v.number()),
     },
     handler: async (ctx, args): Promise<{ url?: string; error?: string }> => {
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-        console.log("HANDLER_START: createCheckoutSession", args);
         try {
-            const user = await getCurrentUserAction(ctx);
-            console.log("USER_FOUND:", { id: user._id, email: user.email, stripeId: user.stripeCustomerId });
-            console.log("ENV_CHECK:", { hasKey: !!process.env.STRIPE_SECRET_KEY, url: process.env.NEXT_PUBLIC_APP_URL });
-            if (!user) throw new Error("User not found");
+            console.log("HANDLER_START: createCheckoutSession", args);
+            
+            // Check auth first
+            const identity = await ctx.auth.getUserIdentity();
+            if (!identity) {
+                console.error("AUTH_ERROR: No identity found");
+                return { error: "Unauthenticated: Please log in to your account." };
+            }
 
+            if (!process.env.STRIPE_SECRET_KEY) {
+                console.error("CONFIG_ERROR: STRIPE_SECRET_KEY is missing");
+                return { error: "Payment system is not configured. (Missing Secret Key)" };
+            }
+
+            const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+            const user = await getCurrentUserAction(ctx);
+            
+            console.log("USER_FOUND:", { id: user._id, email: user.email, stripeId: user.stripeCustomerId });
+            
             let customerId: string | undefined = user.stripeCustomerId;
 
             // Create a Stripe customer if they don't have one
@@ -46,7 +58,7 @@ export const createCheckoutSession = action({
                 lineItems.push({
                     price_data: {
                         currency: "usd",
-                        product: "prod_U7jBbwJTTu0UBI", // Directed ID from production
+                        product: "prod_U7jBbwJTTu0UBI", 
                         unit_amount: 3900,
                         recurring: { interval: "month" },
                     },
@@ -57,7 +69,7 @@ export const createCheckoutSession = action({
                 lineItems.push({
                     price_data: {
                         currency: "usd",
-                        product: "prod_U7jBYl3diF0JSO", // Unleashed ID from production
+                        product: "prod_U7jBYl3diF0JSO",
                         unit_amount: 19900,
                     },
                     quantity: 1,
@@ -69,7 +81,6 @@ export const createCheckoutSession = action({
                 else if (args.topUpAmount === 200) unitAmount = 1900; // $19.00
                 else unitAmount = Math.round((args.topUpAmount / 10) * 100); // Standard fallback
 
-                // For one-time credit top-ups
                 lineItems.push({
                     price_data: {
                         currency: "usd",
@@ -84,15 +95,15 @@ export const createCheckoutSession = action({
             }
 
             if (lineItems.length === 0) {
-                throw new Error("No items to purchase. Please specify a tier or top-up amount.");
+                return { error: "No items selected for purchase." };
             }
 
-            const session: Stripe.Checkout.Session = await stripe.checkout.sessions.create({
+            const session = await stripe.checkout.sessions.create({
                 customer: customerId,
                 line_items: lineItems,
                 mode: args.tierId === "pro" ? "subscription" : "payment",
-                success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/?session_id={CHECKOUT_SESSION_ID}`,
-                cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/`,
+                success_url: `${process.env.NEXT_PUBLIC_APP_URL || "https://assetflow.studio"}/?session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "https://assetflow.studio"}/`,
                 metadata: {
                     convexUserId: user._id,
                     tierId: args.tierId || "",
@@ -100,10 +111,11 @@ export const createCheckoutSession = action({
                 },
             });
 
+            console.log("SESSION_CREATED:", session.id);
             return { url: session.url! };
         } catch (error: any) {
-            console.error("STRIPE_ERROR:", error.message);
-            return { error: error.message || "Failed to create Stripe session" };
+            console.error("GLOBAL_STRIPE_ERROR:", error);
+            return { error: error.message || "A server error occurred during checkout initialization." };
         }
     },
 });

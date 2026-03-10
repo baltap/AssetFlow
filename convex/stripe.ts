@@ -12,88 +12,96 @@ export const createCheckoutSession = action({
         topUpAmount: v.optional(v.number()),
     },
     handler: async (ctx, args): Promise<string | null> => {
-        const user = await getCurrentUserAction(ctx);
-        if (!user) throw new Error("User not found");
+        try {
+            const user = await getCurrentUserAction(ctx);
+            if (!user) throw new Error("User not found");
 
-        let customerId: string | undefined = user.stripeCustomerId;
+            let customerId: string | undefined = user.stripeCustomerId;
 
-        // Create a Stripe customer if they don't have one
-        if (!customerId) {
-            const customer = await stripe.customers.create({
-                email: user.email,
-                name: user.name,
-                metadata: { convexUserId: user._id },
-            });
-            customerId = customer.id;
-            await ctx.runMutation(internal.users.updateStripeCustomerInternal, {
-                userId: user._id,
-                stripeCustomerId: customerId,
-            });
-        }
+            // Create a Stripe customer if they don't have one
+            if (!customerId) {
+                const customer = await stripe.customers.create({
+                    email: user.email,
+                    name: user.name,
+                    metadata: { convexUserId: user._id },
+                });
+                customerId = customer.id;
+                await ctx.runMutation(internal.users.updateStripeCustomerInternal, {
+                    userId: user._id,
+                    stripeCustomerId: customerId,
+                });
+            }
 
-        const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+            const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
-        console.log(`Creating session for: ${args.tierId || 'Top-up'} (${args.topUpAmount || ''})`);
+            console.log(`Creating session for: ${args.tierId || 'Top-up'} (${args.topUpAmount || ''})`);
 
-        if (args.tierId === "pro") {
-            // Director Tier - MUST be a recurring price in Stripe
-            const priceId = "price_1T4imFDz5ct8kj04k2oY9L3W"; // Replace with your actual Pro subscription Price ID
-            lineItems.push({
-                price: priceId,
-                quantity: 1,
-            });
-        } else if (args.tierId === "studio") {
-            // Unleashed Tier - One-time payment ($199 Lifetime)
-            lineItems.push({
-                price_data: {
-                    currency: "usd",
-                    product_data: {
-                        name: "AssetFlow Unleashed (Lifetime Access)",
-                        description: "Unlimited production, BYOK access, and priority rendering",
+            if (args.tierId === "pro") {
+                // Director Tier - $39/mo
+                lineItems.push({
+                    price_data: {
+                        currency: "usd",
+                        product: "prod_U7jBbwJTTu0UBI", // Directed ID from production
+                        unit_amount: 3900,
+                        recurring: { interval: "month" },
                     },
-                    unit_amount: 19900, // $199.00
-                },
-                quantity: 1,
-            });
-        } else if (args.topUpAmount) {
-            // Mapping top-up amounts to prices (in cents)
-            let unitAmount = 0;
-            if (args.topUpAmount === 50) unitAmount = 900; // $9.00
-            else if (args.topUpAmount === 200) unitAmount = 1900; // $19.00
-            else unitAmount = Math.round((args.topUpAmount / 10) * 100); // Standard fallback
-
-            // For one-time credit top-ups
-            lineItems.push({
-                price_data: {
-                    currency: "usd",
-                    product_data: {
-                        name: `${args.topUpAmount} AssetFlow Credits`,
-                        description: "Top up your production credits",
+                    quantity: 1,
+                });
+            } else if (args.tierId === "studio") {
+                // Unleashed Tier - $199 Lifetime
+                lineItems.push({
+                    price_data: {
+                        currency: "usd",
+                        product: "prod_U7jBYl3diF0JSO", // Unleashed ID from production
+                        unit_amount: 19900,
                     },
-                    unit_amount: unitAmount,
+                    quantity: 1,
+                });
+            } else if (args.topUpAmount) {
+                // Mapping top-up amounts to prices (in cents)
+                let unitAmount = 0;
+                if (args.topUpAmount === 50) unitAmount = 900; // $9.00
+                else if (args.topUpAmount === 200) unitAmount = 1900; // $19.00
+                else unitAmount = Math.round((args.topUpAmount / 10) * 100); // Standard fallback
+
+                // For one-time credit top-ups
+                lineItems.push({
+                    price_data: {
+                        currency: "usd",
+                        product_data: {
+                            name: `${args.topUpAmount} AssetFlow Credits`,
+                            description: "Top up your production credits",
+                        },
+                        unit_amount: unitAmount,
+                    },
+                    quantity: 1,
+                });
+            }
+
+            if (lineItems.length === 0) {
+                throw new Error("No items to purchase. Please specify a tier or top-up amount.");
+            }
+
+            const session: Stripe.Checkout.Session = await stripe.checkout.sessions.create({
+                customer: customerId,
+                line_items: lineItems,
+                mode: args.tierId === "pro" ? "subscription" : "payment",
+                success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/?session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/`,
+                metadata: {
+                    convexUserId: user._id,
+                    tierId: args.tierId || "",
+                    topUpAmount: args.topUpAmount ? args.topUpAmount.toString() : "",
                 },
-                quantity: 1,
             });
+
+            return session.url;
+        } catch (error: any) {
+            console.error("STRIPE_ERROR:", error.message);
+            // Re-throw so the frontend gets the specific message if possible, 
+            // but log it specifically for our eyes.
+            throw new Error(error.message || "Failed to create Stripe session");
         }
-
-        if (lineItems.length === 0) {
-            throw new Error("No items to purchase. Please specify a tier or top-up amount.");
-        }
-
-        const session: Stripe.Checkout.Session = await stripe.checkout.sessions.create({
-            customer: customerId,
-            line_items: lineItems,
-            mode: args.tierId === "pro" ? "subscription" : "payment",
-            success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/`,
-            metadata: {
-                convexUserId: user._id,
-                tierId: args.tierId || "",
-                topUpAmount: args.topUpAmount ? args.topUpAmount.toString() : "",
-            },
-        });
-
-        return session.url;
     },
 });
 

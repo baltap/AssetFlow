@@ -11,7 +11,8 @@ export default defineSchema({
     freeVoiceSyncsUsed: v.optional(v.number()),
     elevenlabsApiKey: v.optional(v.string()),
     stripeCustomerId: v.optional(v.string()),
-  }).index("by_token", ["tokenIdentifier"]),
+  }).index("by_token", ["tokenIdentifier"])
+    .index("by_stripe_customer", ["stripeCustomerId"]),
 
   folders: defineTable({
     userId: v.id("users"),

@@ -106,12 +106,51 @@ export const fulfill = action({
                 return { success: false };
             }
 
+            // Important: Store the customer ID so we can identify them in recurring webhooks
+            await ctx.runMutation(internal.users.updateStripeCustomerInternal, {
+                userId: convexUserId,
+                stripeCustomerId: customerId,
+            });
+
             await ctx.runMutation(internal.users.fulfillPurchaseInternal, {
                 convexUserId,
                 stripeCustomerId: customerId,
                 tier: tierId || undefined,
                 credits: topUpAmount,
             });
+        } else if (event.type === "invoice.paid") {
+            const invoice = event.data.object as Stripe.Invoice;
+            const customerId = invoice.customer as string;
+
+            // Find user by stripeCustomerId
+            const user = await ctx.runQuery(internal.users.getUserByStripeIdInternal, {
+                stripeCustomerId: customerId,
+            });
+
+            if (user && user.tier !== "creative") {
+                // For recurring subs, refill credits every month
+                const creditAmount = user.tier === "pro" ? 500 : 0; // Adjust logic for studio if needed
+                if (creditAmount > 0) {
+                    await ctx.runMutation(internal.users.fulfillPurchaseInternal, {
+                        convexUserId: user._id,
+                        stripeCustomerId: customerId,
+                        credits: creditAmount,
+                    });
+                }
+            }
+        } else if (event.type === "customer.subscription.deleted") {
+            const subscription = event.data.object as Stripe.Subscription;
+            const customerId = subscription.customer as string;
+
+            const user = await ctx.runQuery(internal.users.getUserByStripeIdInternal, {
+                stripeCustomerId: customerId,
+            });
+
+            if (user) {
+                await ctx.runMutation(internal.users.downgradeUserInternal, {
+                    userId: user._id,
+                });
+            }
         }
 
         return { received: true };

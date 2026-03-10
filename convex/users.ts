@@ -180,10 +180,27 @@ export const getUserByTokenInternal = internalQuery({
     }
 });
 
+export const getUserByStripeIdInternal = internalQuery({
+    args: { stripeCustomerId: v.string() },
+    handler: async (ctx, args) => {
+        return await ctx.db
+            .query("users")
+            .withIndex("by_stripe_customer", (q) => q.eq("stripeCustomerId", args.stripeCustomerId))
+            .unique();
+    }
+});
+
 export const getUserByIdInternal = internalQuery({
     args: { userId: v.id("users") },
     handler: async (ctx, args) => {
         return await ctx.db.get(args.userId);
+    }
+});
+
+export const downgradeUserInternal = internalMutation({
+    args: { userId: v.id("users") },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.userId, { tier: "creative" });
     }
 });
 

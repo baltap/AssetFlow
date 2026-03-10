@@ -22,7 +22,6 @@ export function PricingModal({ isOpen, onClose, userId, reason }: PricingModalPr
         setIsLoading(true);
         try {
             const url = await createCheckoutSession({
-                userId,
                 topUpAmount: amount
             });
             if (url) window.location.href = url;
@@ -38,7 +37,6 @@ export function PricingModal({ isOpen, onClose, userId, reason }: PricingModalPr
         setIsLoading(true);
         try {
             const url = await createCheckoutSession({
-                userId,
                 tierId: tier as "pro" | "studio"
             });
             if (url) window.location.href = url;

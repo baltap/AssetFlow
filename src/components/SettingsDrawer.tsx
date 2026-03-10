@@ -35,10 +35,11 @@ export function SettingsDrawer({ isOpen, onClose, userId }: SettingsDrawerProps)
     // Initialize keys if settings are loaded
     useEffect(() => {
         if (settings?.apiKeys) {
-            setPexelsKey(settings.apiKeys.pexels || "");
-            setPixabayKey(settings.apiKeys.pixabay || "");
-            setGeminiKey(settings.apiKeys.gemini || "");
-            setElevenLabsKey(settings.apiKeys.elevenlabs || "");
+            const keys = settings.apiKeys as Record<string, string>;
+            setPexelsKey(keys["pexels"] || "");
+            setPixabayKey(keys["pixabay"] || "");
+            setGeminiKey(keys["gemini"] || "");
+            setElevenLabsKey(keys["elevenlabs"] || "");
         }
     }, [settings]);
 

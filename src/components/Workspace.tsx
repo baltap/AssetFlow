@@ -200,7 +200,6 @@ export function Workspace({ projectId, versionId, userId, onInsufficientCredits,
 
             // Deduct credits for the final product
             await deductCredits({
-                userId,
                 amount: 10,
                 action: "asset_export"
             });

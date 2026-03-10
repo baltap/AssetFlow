@@ -178,7 +178,7 @@ export function EditorView({ projectId, versionId, onUpgradeRequest }: EditorVie
                     showToast("Failed to generate voiceover.", "error");
                 }
             } else if (result && result.success && result.usedFreeSync) {
-                setFreeSyncModal({ remaining: result.syncsRemaining });
+                setFreeSyncModal({ remaining: result.syncsRemaining ?? 0 });
             }
         } catch (error) {
             console.error("VO generation failed", error);
@@ -243,7 +243,6 @@ export function EditorView({ projectId, versionId, onUpgradeRequest }: EditorVie
             // Deduct credits unless Unleashed
             if (user.tier !== "studio") {
                 await deductCredits({
-                    userId: user._id,
                     amount: 10,
                     action: "asset_export"
                 });

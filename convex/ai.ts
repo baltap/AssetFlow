@@ -114,7 +114,7 @@ export const segmentScript = action({
                 segments = cachedAnalysisData;
             } else {
                 const response = await aiClient.models.generateContent({
-                    model: "gemini-1.5-flash",
+                    model: "gemini-3-flash-preview",
                     contents: [{
                         parts: [{
                             text: `${DIRECTOR_CONTEXT}
@@ -161,7 +161,7 @@ export const segmentScript = action({
                     await ctx.runMutation(internal.logs.logUsage, {
                         userId: user._id,
                         feature: "segment_script",
-                        model: "gemini-1.5-flash",
+                        model: "gemini-3-flash-preview",
                         tokens: {
                             prompt: response.usageMetadata.promptTokenCount || 0,
                             completion: response.usageMetadata.candidatesTokenCount || 0,
@@ -274,7 +274,7 @@ export const regenerateScene = action({
                 }
 
                 const response = await aiClient.models.generateContent({
-                    model: "gemini-1.5-flash",
+                    model: "gemini-3-flash-preview",
                     contents: [{
                         parts: [{
                             text: `${DIRECTOR_CONTEXT}
@@ -311,7 +311,7 @@ export const regenerateScene = action({
                     await ctx.runMutation(internal.logs.logUsage, {
                         userId: user._id,
                         feature: "segment_script",
-                        model: "gemini-1.5-flash",
+                        model: "gemini-3-flash-preview",
                         tokens: {
                             prompt: response.usageMetadata.promptTokenCount || 0,
                             completion: response.usageMetadata.candidatesTokenCount || 0,
@@ -419,7 +419,7 @@ export const refineAllScenesWithVibe = action({
                     while (retryCount < maxRetries) {
                         try {
                             const response = await aiClient.models.generateContent({
-                                model: "gemini-1.5-flash",
+                                model: "gemini-3-flash-preview",
                                 contents: [{
                                     parts: [{
                                         text: `${DIRECTOR_CONTEXT}
@@ -458,7 +458,7 @@ export const refineAllScenesWithVibe = action({
                                 await ctx.runMutation(internal.logs.logUsage, {
                                     userId: user._id,
                                     feature: "segment_script",
-                                    model: "gemini-1.5-flash",
+                                    model: "gemini-3-flash-preview",
                                     tokens: {
                                         prompt: response.usageMetadata.promptTokenCount || 0,
                                         completion: response.usageMetadata.candidatesTokenCount || 0,
@@ -585,7 +585,7 @@ Tell me which one (by Index 0-${assets.length - 1}) fits the lighting, compositi
             }
 
             const response = await aiClient.models.generateContent({
-                model: "gemini-1.5-flash",
+                model: "gemini-3-flash-preview",
                 contents: [{ parts }],
                 config: {
                     responseMimeType: "application/json",
@@ -605,7 +605,7 @@ Tell me which one (by Index 0-${assets.length - 1}) fits the lighting, compositi
                 await ctx.runMutation(internal.logs.logUsage, {
                     userId: project.userId as any,
                     feature: "rank_assets",
-                    model: "gemini-1.5-flash",
+                    model: "gemini-3-flash-preview",
                     tokens: {
                         prompt: response.usageMetadata.promptTokenCount || 0,
                         completion: response.usageMetadata.candidatesTokenCount || 0,
@@ -638,7 +638,7 @@ Tell me which one (by Index 0-${assets.length - 1}) fits the lighting, compositi
 async function verifyAiIntentInternal(client: GoogleGenAI, text: string): Promise<{ isSafe: boolean; reason: string }> {
     try {
         const response = await client.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: "gemini-3-flash-preview",
             contents: [{
                 parts: [{
                     text: `${VERIFICATION_CONTEXT}

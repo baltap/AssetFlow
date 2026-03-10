@@ -161,15 +161,7 @@ export default defineSchema({
 
   segmentCache: defineTable({
     textHash: v.string(),
-    analysis: v.object({
-      visualDescription: v.string(),
-      visualKeywords: v.array(v.string()),
-      shotType: v.string(),
-      lighting: v.string(),
-      cameraMovement: v.string(),
-      directorCommentary: v.string(),
-      durationEstimate: v.number(),
-    }),
+    analysis: v.any(),
     timestamp: v.number(),
   }).index("by_hash", ["textHash"]),
 });

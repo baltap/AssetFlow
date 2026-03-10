@@ -122,7 +122,7 @@ export const searchPexelsForScene = internalAction({
                     const aiClient = new (await import("@google/genai")).GoogleGenAI({ apiKey: aiKey });
 
                     const response = await aiClient.models.generateContent({
-                        model: "gemini-3-flash-preview",
+                        model: "gemini-1.5-flash-latest",
                         contents: `Analyze this cinematic description: "${scene.visualDescription}". 
                         The previous search failed. Provide EXACTLY ONE extremely generic, one-word fallback search term (e.g., "nature", "city", "office", "people", "abstract") that is guaranteed to yield stock footage results.`
                     });

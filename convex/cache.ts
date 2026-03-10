@@ -73,15 +73,18 @@ export const getCachedSegment = internalQuery({
 export const setCachedSegment = internalMutation({
   args: {
     textHash: v.string(),
-    analysis: v.object({
-      visualDescription: v.string(),
-      visualKeywords: v.array(v.string()),
-      shotType: v.string(),
-      lighting: v.string(),
-      cameraMovement: v.string(),
-      directorCommentary: v.string(),
-      durationEstimate: v.number(),
-    }),
+    analysis: v.union(
+      v.object({
+        visualDescription: v.string(),
+        visualKeywords: v.array(v.string()),
+        shotType: v.string(),
+        lighting: v.string(),
+        cameraMovement: v.string(),
+        directorCommentary: v.string(),
+        durationEstimate: v.number(),
+      }),
+      v.array(v.any())
+    ),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db

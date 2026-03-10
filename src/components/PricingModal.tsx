@@ -21,11 +21,13 @@ export function PricingModal({ isOpen, onClose, userId, reason }: PricingModalPr
     const handleTopUp = async (amount: number) => {
         setIsLoading(true);
         try {
-            const url = await createCheckoutSession({
+            const result = await createCheckoutSession({
                 topUpAmount: amount
             });
-            if (url) {
-                window.location.href = url;
+            if (result?.url) {
+                window.location.href = result.url;
+            } else if (result?.error) {
+                throw new Error(result.error);
             } else {
                 throw new Error("No checkout URL returned from Stripe");
             }
@@ -42,11 +44,13 @@ export function PricingModal({ isOpen, onClose, userId, reason }: PricingModalPr
         setIsLoading(true);
         try {
             console.log("Initiating upgrade for tier:", tier);
-            const url = await createCheckoutSession({
+            const result = await createCheckoutSession({
                 tierId: tier as "pro" | "studio"
             });
-            if (url) {
-                window.location.href = url;
+            if (result?.url) {
+                window.location.href = result.url;
+            } else if (result?.error) {
+                throw new Error(result.error);
             } else {
                 throw new Error("No checkout URL returned from Stripe");
             }

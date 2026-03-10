@@ -1,19 +1,24 @@
+"use node";
 import { v } from "convex/values";
 import { action, internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { getCurrentUserAction } from "./authUtils";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// stripe instance will be created inside the actions
 
 export const createCheckoutSession = action({
     args: {
         tierId: v.optional(v.union(v.literal("pro"), v.literal("studio"))),
         topUpAmount: v.optional(v.number()),
     },
-    handler: async (ctx, args): Promise<string | null> => {
+    handler: async (ctx, args): Promise<{ url?: string; error?: string }> => {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+        console.log("HANDLER_START: createCheckoutSession", args);
         try {
             const user = await getCurrentUserAction(ctx);
+            console.log("USER_FOUND:", { id: user._id, email: user.email, stripeId: user.stripeCustomerId });
+            console.log("ENV_CHECK:", { hasKey: !!process.env.STRIPE_SECRET_KEY, url: process.env.NEXT_PUBLIC_APP_URL });
             if (!user) throw new Error("User not found");
 
             let customerId: string | undefined = user.stripeCustomerId;
@@ -95,12 +100,10 @@ export const createCheckoutSession = action({
                 },
             });
 
-            return session.url;
+            return { url: session.url! };
         } catch (error: any) {
             console.error("STRIPE_ERROR:", error.message);
-            // Re-throw so the frontend gets the specific message if possible, 
-            // but log it specifically for our eyes.
-            throw new Error(error.message || "Failed to create Stripe session");
+            return { error: error.message || "Failed to create Stripe session" };
         }
     },
 });
@@ -108,6 +111,7 @@ export const createCheckoutSession = action({
 export const fulfill = action({
     args: { signature: v.string(), payload: v.string() },
     handler: async (ctx: any, args: any) => {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
         const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
         let event;
 

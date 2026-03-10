@@ -33,14 +33,26 @@ export const createCheckoutSession = action({
 
         const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
-        if (args.tierId) {
-            // Mapping Tier IDs to Stripe Price IDs (You will need to replace these with your actual Stripe Price IDs)
-            const priceMap: Record<string, string> = {
-                pro: "price_1T4imFDz5ct8kj04k2oY9L3W", // Director Tier
-                studio: "price_1T4jLFDz5ct8kj041vKoklGn", // Unleashed Tier ($199 Lifetime)
-            };
+        console.log(`Creating session for: ${args.tierId || 'Top-up'} (${args.topUpAmount || ''})`);
+
+        if (args.tierId === "pro") {
+            // Director Tier - MUST be a recurring price in Stripe
+            const priceId = "price_1T4imFDz5ct8kj04k2oY9L3W"; // Replace with your actual Pro subscription Price ID
             lineItems.push({
-                price: priceMap[args.tierId],
+                price: priceId,
+                quantity: 1,
+            });
+        } else if (args.tierId === "studio") {
+            // Unleashed Tier - One-time payment ($199 Lifetime)
+            lineItems.push({
+                price_data: {
+                    currency: "usd",
+                    product_data: {
+                        name: "AssetFlow Unleashed (Lifetime Access)",
+                        description: "Unlimited production, BYOK access, and priority rendering",
+                    },
+                    unit_amount: 19900, // $199.00
+                },
                 quantity: 1,
             });
         } else if (args.topUpAmount) {
@@ -62,6 +74,10 @@ export const createCheckoutSession = action({
                 },
                 quantity: 1,
             });
+        }
+
+        if (lineItems.length === 0) {
+            throw new Error("No items to purchase. Please specify a tier or top-up amount.");
         }
 
         const session: Stripe.Checkout.Session = await stripe.checkout.sessions.create({

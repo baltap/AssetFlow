@@ -24,9 +24,14 @@ export function PricingModal({ isOpen, onClose, userId, reason }: PricingModalPr
             const url = await createCheckoutSession({
                 topUpAmount: amount
             });
-            if (url) window.location.href = url;
+            if (url) {
+                window.location.href = url;
+            } else {
+                throw new Error("No checkout URL returned from Stripe");
+            }
         } catch (err) {
             console.error("Stripe session failed:", err);
+            alert(`Process failed: ${err instanceof Error ? err.message : "Internal error"}.`);
         } finally {
             setIsLoading(false);
         }
@@ -36,12 +41,18 @@ export function PricingModal({ isOpen, onClose, userId, reason }: PricingModalPr
         if (tier === "creative") return; // Free tier
         setIsLoading(true);
         try {
+            console.log("Initiating upgrade for tier:", tier);
             const url = await createCheckoutSession({
                 tierId: tier as "pro" | "studio"
             });
-            if (url) window.location.href = url;
+            if (url) {
+                window.location.href = url;
+            } else {
+                throw new Error("No checkout URL returned from Stripe");
+            }
         } catch (err) {
             console.error("Stripe session failed:", err);
+            alert(`Process failed: ${err instanceof Error ? err.message : "Internal error"}. Please check your Stripe configuration.`);
         } finally {
             setIsLoading(false);
         }

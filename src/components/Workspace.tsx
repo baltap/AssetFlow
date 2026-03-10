@@ -704,9 +704,11 @@ export function Workspace({ projectId, versionId, userId, onInsufficientCredits,
             </div>
 
             {/* Bottom: Inline Timeline Drawer (fixed to bottom bar) */}
-            <Timeline
-                handleExportBundle={handleExportBundle}
-            />
+            {!showEditor && (
+                <Timeline
+                    handleExportBundle={handleExportBundle}
+                />
+            )}
 
             {/* Custom BYOK Error Modal */}
             {byokError && (

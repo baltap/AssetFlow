@@ -30,7 +30,7 @@ export const storeUser = mutation({
             email: identity.email || "no-email@clerk.user",
             tokenIdentifier: identity.tokenIdentifier,
             tier: "creative",
-            credits: 10,
+            credits: 20,
             freeVoiceSyncsUsed: 0,
         });
     },

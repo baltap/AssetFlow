@@ -271,7 +271,7 @@ export function LandingPage() {
                     </div>
 
                     <div className="flex gap-12">
-                        {[{ name: "X", href: "#" }, { name: "Discord", href: "#" }, { name: "Terms", href: "/terms" }, { name: "Privacy", href: "/privacy" }].map(item => (
+                        {[{ name: "X", href: "https://x.com/AssetFlowStudio" }, { name: "Discord", href: "https://discord.gg/jwvAcKPc" }, { name: "Terms", href: "/terms" }, { name: "Privacy", href: "/privacy" }].map(item => (
                             <Link key={item.name} href={item.href} className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 hover:text-[var(--primary)] transition-colors">
                                 {item.name}
                             </Link>

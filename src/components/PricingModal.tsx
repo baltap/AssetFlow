@@ -115,23 +115,8 @@ export function PricingModal({ isOpen, onClose, userId, reason }: PricingModalPr
 
                 <div className="p-12">
                     <div className="text-center mb-12">
-                        {reason === 'credits' && (
-                            <div className="mb-8 flex flex-col items-center">
-                                <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 px-6 py-3 rounded-2xl mb-6 animate-pulse">
-                                    <AlertCircle className="text-red-500" size={20} />
-                                    <span className="text-red-500 text-xs font-black uppercase tracking-[0.2em]">Production Halted: Out of Credits</span>
-                                </div>
-                                <h2 className="text-6xl font-black text-white tracking-tighter mb-4 uppercase">Refuel Your Vision</h2>
-                                <p className="text-white/40 text-sm max-w-lg mx-auto font-medium">Your creative engine has run out of juice. Upgrade to a professional tier for monthly refills or top up your account to resume production immediately.</p>
-                            </div>
-                        )}
-                        
-                        {reason !== 'credits' && (
-                            <>
-                                <h2 className="text-5xl font-black text-white tracking-tighter mb-3 uppercase">Studio Access</h2>
-                                <p className="text-white/20 text-[11px] max-w-md mx-auto uppercase tracking-[0.4em] font-black leading-relaxed">Select a tier to scale your vision</p>
-                            </>
-                        )}
+                        <h2 className="text-5xl font-black text-white tracking-tighter mb-3 uppercase">Studio Access</h2>
+                        <p className="text-white/20 text-[11px] max-w-md mx-auto uppercase tracking-[0.4em] font-black leading-relaxed">Select a tier to scale your vision</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">

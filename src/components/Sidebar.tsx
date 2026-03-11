@@ -1,18 +1,6 @@
-import {
-    FileText,
-    Grid,
-    LayoutPanelLeft,
-    Settings,
-    Share,
-    Sparkles,
-    Video
-} from "lucide-react";
-import Link from "next/link";
-
 interface SidebarProps {
     activeTab: string;
     onNavigate: (tab: string) => void;
-    onOpenSettings: () => void;
 }
 
 const navItems = [
@@ -20,7 +8,7 @@ const navItems = [
     { id: "editor", icon: "theaters", label: "Editor" },
 ];
 
-export function Sidebar({ activeTab, onNavigate, onOpenSettings }: SidebarProps) {
+export function Sidebar({ activeTab, onNavigate }: SidebarProps) {
     return (
         <aside className="w-14 bg-[var(--studio-charcoal)] border-r border-white/5 flex flex-col items-center py-6 gap-8 z-20 h-full fixed left-0 top-0">
 
@@ -38,17 +26,6 @@ export function Sidebar({ activeTab, onNavigate, onOpenSettings }: SidebarProps)
                 ))}
             </nav>
 
-            <div className="mt-auto flex flex-col gap-6 items-center">
-                <button
-                    onClick={onOpenSettings}
-                    className="text-white/20 hover:text-white transition-colors"
-                >
-                    <span className="material-icons">settings</span>
-                </button>
-                <div className="w-8 h-8 rounded-full bg-[var(--primary)]/20 border border-[var(--primary)]/50 flex items-center justify-center">
-                    <span className="text-[10px] font-bold text-[var(--primary)] uppercase">PB</span>
-                </div>
-            </div>
         </aside>
     );
 }

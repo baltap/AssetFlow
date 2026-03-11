@@ -5,6 +5,7 @@ import { checkProjectOwnershipAction, checkSceneOwnershipAction, checkVersionOwn
 import { GoogleGenAI } from "@google/genai";
 
 const GOOGLE_API_KEY = process.env.GOOGLE_GENAI_API_KEY || "";
+const AI_MODEL = "gemini-3-flash-preview";
 
 // Phase 4: Deterministic hash function for segment caching
 function getHash(text: string, mood: string): string {
@@ -113,8 +114,9 @@ export const segmentScript = action({
                 console.log(`[Phase 4] Cache hit for whole script analysis: ${scriptHash}`);
                 segments = cachedAnalysisData;
             } else {
+                console.log(`[Director] Requesting content generation from ${AI_MODEL}...`);
                 const response = await aiClient.models.generateContent({
-                    model: "gemini-3-flash-preview",
+                    model: AI_MODEL,
                     contents: [{
                         parts: [{
                             text: `${DIRECTOR_CONTEXT}
@@ -156,12 +158,14 @@ export const segmentScript = action({
                     }
                 });
 
+                console.log(`[Director] Response received. Status: ${response.usageMetadata ? 'Success' : 'Partial'}`);
+
                 // Log usage
                 if (response.usageMetadata) {
                     await ctx.runMutation(internal.logs.logUsage, {
                         userId: user._id,
                         feature: "segment_script",
-                        model: "gemini-3-flash-preview",
+                        model: AI_MODEL,
                         tokens: {
                             prompt: response.usageMetadata.promptTokenCount || 0,
                             completion: response.usageMetadata.candidatesTokenCount || 0,
@@ -170,10 +174,20 @@ export const segmentScript = action({
                 }
 
                 const responseText = response.text;
-                if (!responseText) throw new Error("Empty AI response");
+                if (!responseText) {
+                    console.error("[Director] Empty AI response body.");
+                    throw new Error("Empty AI response");
+                }
 
-                const result = JSON.parse(responseText);
-                segments = result.storyboard || [];
+                console.log(`[Director] Raw text preview: ${responseText.substring(0, 100)}...`);
+
+                try {
+                    const result = JSON.parse(responseText);
+                    segments = result.storyboard || [];
+                } catch (parseError) {
+                    console.error("[Director] JSON Parse Error. Raw text:", responseText);
+                    throw new Error("AI returned malformed JSON storyboard");
+                }
                 
                 if (segments.length > 0) {
                     // Phase 4: Store in cache

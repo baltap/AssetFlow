@@ -128,12 +128,13 @@ export function LandingPage() {
                                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                             </button>
                         </SignInButton>
-                        <button 
+                        <a 
+                            href="#production"
                             onClick={() => posthog.capture('Watch Workflow Clicked', { location: 'hero' })}
-                            className="px-10 py-5 bg-white/5 text-white rounded-full font-black uppercase tracking-[0.2em] text-xs hover:bg-white/10 transition-all border border-white/10"
+                            className="px-10 py-5 bg-white/5 text-white rounded-full font-black uppercase tracking-[0.2em] text-xs hover:bg-white/10 transition-all border border-white/10 inline-block text-center"
                         >
                             Watch the Workflow
-                        </button>
+                        </a>
                     </div>
                 </div>
 
@@ -270,7 +271,7 @@ export function LandingPage() {
                     </div>
 
                     <div className="flex gap-12">
-                        {[{ name: "Twitter", href: "#" }, { name: "Discord", href: "#" }, { name: "Terms", href: "/terms" }, { name: "Privacy", href: "/privacy" }].map(item => (
+                        {[{ name: "X", href: "#" }, { name: "Discord", href: "#" }, { name: "Terms", href: "/terms" }, { name: "Privacy", href: "/privacy" }].map(item => (
                             <Link key={item.name} href={item.href} className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 hover:text-[var(--primary)] transition-colors">
                                 {item.name}
                             </Link>

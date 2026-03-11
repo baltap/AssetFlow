@@ -68,7 +68,6 @@ export default function Home() {
                 <Sidebar
                   activeTab={activeTab}
                   onNavigate={(tab: string) => setActiveTab(tab)}
-                  onOpenSettings={() => setIsSettingsOpen(true)}
                 />
 
                 <SettingsDrawer
